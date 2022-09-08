@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_delete, post_save
+from django.db.models import Q
 
 import uuid
 
@@ -12,23 +13,11 @@ def user_directory_path(instance, filename):
 
 
 class HashTag(models.Model):
-    title = models.CharField(max_length=25, blank=False, unique=True)
+    name = models.CharField(max_length=25, blank=False, unique=True)
 
     def __str__(self):
-        return f'#{self.title}'
+        return f'#{self.name}'
 
-    # @classmethod
-    # def create_hashtag(cls, name):
-    #     tag = cls.objects.create(name=name)
-    #     return tag
-
-
-    # @classmethod
-    # def get_or_create_hashtag(cls, name):
-    #     try:
-    #         hashtag = cls.objects.all(name=name)
-    #     except cls.DoesNotExist:
-    #         hashtag = cls.create_hashtag(name=name)
 
 
 
@@ -39,12 +28,23 @@ class Post(models.Model):
     description = models.TextField(max_length=255, blank=True)
     posted = models.DateTimeField(auto_now_add=True)
     edited = models.DateTimeField(auto_now=True)
-    hashtags = models.ManyToManyField(HashTag, blank=True, related_name='hashtags')
+    hashtags = models.ManyToManyField(HashTag, blank=True)
 
 
     def __str__(self):
         return f"{self.user.username}'s post"
 
+    # def comment_count_id(self):
+    #     return Comment.count_comments_for_post_with_id(self.id)
+
+    # def like_count_id(self):
+    #     return Like.count_likes_for_post_with_id(self.id)
+
+    def comment_count(self):
+        return self.comments.count()
+
+    def like_count(self):
+        return self.likes.count()
 
 class Comment(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')
@@ -55,6 +55,11 @@ class Comment(models.Model):
 
     def __str__(self):
         return f"{self.user.username}'s comment"
+
+    # @classmethod
+    # def count_comments_for_post_with_id(cls, post_id):
+    #     count_query = Q(post_id=post_id)
+    #     return cls.objects.filter(count_query).count()
 
     def comment_notification(sender, instance, *args, **kwargs):
         comment = instance
@@ -135,11 +140,14 @@ post_save.connect(Stream.add_following, sender=Follow)
 
 
 class Like(models.Model):
-    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='likes')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     notify_code = models.UUIDField(default=uuid.uuid4, editable=False)
 
-
+    # @classmethod
+    # def count_like_for_post_with_id(cls, post_id):
+    #     count_query = Q(post_id=post_id)
+    #     return cls.objects.filter(count_query).count()
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=['post', 'user'], name='unique_like')

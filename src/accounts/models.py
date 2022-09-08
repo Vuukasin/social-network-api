@@ -23,6 +23,17 @@ class Profile(models.Model):
         if created:
             Profile.objects.create(user=instance)
 
+    def posts_count(self):
+        return self.user.posts.count()
+
+
+    def following_count(self):
+        return self.user.following.count()
+
+    def followers_count(self):
+        return self.user.followers.count()
+        
+
 
 
 post_save.connect(Profile.create_profile, sender=User)

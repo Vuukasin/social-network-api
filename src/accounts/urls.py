@@ -3,8 +3,9 @@ from .views import UserProfileApiView
 
 
 urlpatterns = [
-    path('api/<str:username>/', UserProfileApiView.as_view())
     
+    path('api/v1/<str:username>/profile', UserProfileApiView.as_view())
+
 ]
 
 

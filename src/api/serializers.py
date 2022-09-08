@@ -5,8 +5,10 @@ User = get_user_model()
 
 
 
-class UserPublicSerializer(serializers.Serializer):
+
+class UserOwnerSerializer(serializers.Serializer):
     username = serializers.CharField(read_only=True)
+    avatar = serializers.ImageField(source='profile.avatar', read_only=True)
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -15,6 +17,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class RegisterSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(style={'input_type': 'password'})
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'password']
